@@ -177,6 +177,7 @@ func (s *Server) joinHandler(w http.ResponseWriter, req *http.Request) {
 func (s *Server) sqlHandler(w http.ResponseWriter, req *http.Request) {
 	state := s.cluster.State()
 	if state != "primary" {
+    log.Printf("I AM NOT THE PRIMARY, NEED TO FORWARD THIS REQUEST TO MASTER")
 		http.Error(w, "Only the primary can service queries, but this is a "+state, http.StatusBadRequest)
 		return
 	}
