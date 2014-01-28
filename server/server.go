@@ -80,16 +80,16 @@ func (s *Server) ListenAndServe(primary string) error {
     s.Join(primary)
     go func() {
       for {
-        //if s.healthcheckPrimary() {
-          //time.Sleep(10 * time.Millisecond)
-          //continue
-        //}
+        if s.healthcheckPrimary() {
+          time.Sleep(10 * time.Millisecond)
+          continue
+        }
 
-        //s.cluster.PerformFailover()
+        s.cluster.PerformFailover()
 
-        //if s.cluster.State() == "primary" {
-          //break
-        //}
+        if s.cluster.State() == "primary" {
+          break
+        }
       }
     }()
   }
@@ -205,17 +205,17 @@ func (s *Server) sqlHandler(w http.ResponseWriter, req *http.Request) {
     http.Error(w, err.Error(), http.StatusBadRequest)
   }
 
-  //r := &Replicate{
-    //Self:  s.cluster.self,
-    //Query: query,
-  //}
-  //for _, member := range s.cluster.members {
-    //b := util.JSONEncode(r)
-    //_, err := s.client.SafePost(member.ConnectionString, "/replicate", b)
-    //if err != nil {
-      //log.Printf("Couldn't replicate query to %v: %s", member, err)
-    //}
-  //}
+  r := &Replicate{
+    Self:  s.cluster.self,
+    Query: query,
+  }
+  for _, member := range s.cluster.members {
+    b := util.JSONEncode(r)
+    _, err := s.client.SafePost(member.ConnectionString, "/replicate", b)
+    if err != nil {
+      log.Printf("Couldn't replicate query to %v: %s", member, err)
+    }
+  }
 
   log.Debugf("[%s] Returning response to %#v: %#v", s.cluster.State(), string(query), string(resp))
   w.Write(resp)
