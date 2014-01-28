@@ -81,7 +81,7 @@ func (s *Server) ListenAndServe(primary string) error {
     go func() {
       for {
         //if s.healthcheckPrimary() {
-          //time.Sleep(10 * time.Millisecond)
+          time.Sleep(10 * time.Millisecond)
           //continue
         //}
 
@@ -183,7 +183,7 @@ func (s *Server) sqlHandler(w http.ResponseWriter, req *http.Request) {
     log.Printf("I AM NOT THE PRIMARY, NEED TO FORWARD THIS REQUEST TO MASTER")
     //cs, err := transport.Encode(primary)
     response,err := s.client.SafePost(s.cluster.primary.ConnectionString, "/sql", bytes.NewReader(query))
-    if err != nil {
+    if response == nil || err != nil {
       http.Error(w, "", http.StatusBadRequest)
       return
     } else {
