@@ -184,7 +184,7 @@ func (s *Server) sqlHandler(w http.ResponseWriter, req *http.Request) {
     //cs, err := transport.Encode(primary)
     response,err := s.client.SafePost(s.cluster.primary.ConnectionString, "/sql", bytes.NewReader(query))
     if err != nil {
-      http.Error(w, "failed in forwarding request to primary node", http.StatusBadRequest)
+      http.Error(w, "", http.StatusBadRequest)
       return
     } else {
       r,_ := ioutil.ReadAll(response)
@@ -196,13 +196,13 @@ func (s *Server) sqlHandler(w http.ResponseWriter, req *http.Request) {
 
   if err != nil {
     log.Printf("Couldn't read body: %s", err)
-    http.Error(w, err.Error(), http.StatusBadRequest)
+    http.Error(w, "", http.StatusBadRequest)
   }
 
   log.Debugf("[%s] Received query: %#v", s.cluster.State(), string(query))
   resp, err := s.execute(query)
   if err != nil {
-    http.Error(w, err.Error(), http.StatusBadRequest)
+    http.Error(w, "", http.StatusBadRequest)
   }
 
   //r := &Replicate{
