@@ -12,6 +12,7 @@ import (
   "stripe-ctf.com/sqlcluster/transport"
   "stripe-ctf.com/sqlcluster/util"
   "time"
+  "bytes"
 )
 
 type Server struct {
@@ -176,13 +177,23 @@ func (s *Server) joinHandler(w http.ResponseWriter, req *http.Request) {
 // a raw string rather than JSON.
 func (s *Server) sqlHandler(w http.ResponseWriter, req *http.Request) {
   state := s.cluster.State()
+  query, err := ioutil.ReadAll(req.Body)
+
   if state != "primary" {
     log.Printf("I AM NOT THE PRIMARY, NEED TO FORWARD THIS REQUEST TO MASTER")
-    http.Error(w, "Only the primary can service queries, but this is a "+state, http.StatusBadRequest)
+    //cs, err := transport.Encode(primary)
+    response,err := s.client.SafePost(s.cluster.primary.ConnectionString, "/sql", bytes.NewReader(query))
+    if err != nil {
+      http.Error(w, "failed in forwarding request to primary node", http.StatusBadRequest)
+      return
+    } else {
+      r,_ := ioutil.ReadAll(response)
+      w.Write(r)
+    }
+    //http.Error(w, "Only the primary can service queries, but this is a "+state, http.StatusBadRequest)
     return
   }
 
-  query, err := ioutil.ReadAll(req.Body)
   if err != nil {
     log.Printf("Couldn't read body: %s", err)
     http.Error(w, err.Error(), http.StatusBadRequest)
